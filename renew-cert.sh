@@ -1,1 +1,1 @@
-docker compose run --rm certbot renew
+docker compose --profile acme run --rm certbot renew

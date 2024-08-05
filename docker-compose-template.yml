@@ -4,32 +4,44 @@ services:
   proxy:
     image: haleliasa/equiple-proxy:latest
     ports:
-      - "443:443"
-      - "80:80"
+      - 443:443
+      - 80:80
     volumes:
       - cert:/etc/nginx/cert:ro
-      - acme:/usr/share/nginx/html/acme:ro
     depends_on:
       - api
       - auth
       - client
-      - lottery_api
-      - lottery_client
     stdin_open: true
     tty: true
 
   certbot:
     image: certbot/certbot:latest
+    profiles:
+      - acme
+      - all
     volumes:
       - cert:/etc/letsencrypt:rw
       - acme:/var/www/acme:rw
+    depends_on:
+      - acme
     stdin_open: true
     tty: true
+
+  acme:
+    image: haleliasa/equiple-acme:latest
+    profiles:
+      - acme
+      - all
+    volumes:
+      - acme:/usr/share/nginx/html/acme:ro
+    ports:
+      - 80:80
 
   api:
     image: haleliasa/equiple-api:latest
     expose:
-      - "8080"
+      - 8080
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - RotmgleDatabase__ConnectionString=
@@ -41,7 +53,7 @@ services:
   auth:
     image: haleliasa/realmeye-identity:latest
     expose:
-      - "8081"
+      - 8081
     environment:
       - ASPNETCORE_URLS=http://+:8081
       - UserDatabase__ConnectionString=
@@ -53,26 +65,9 @@ services:
   client:
     image: haleliasa/equiple-client:latest
     expose:
-      - "8082"
+      - 8082
     environment:
       - NGINX_PORT=8082
-    stdin_open: true
-    tty: true
-
-  lottery_api:
-    image: ykaoo/lottery-api:latest
-    environment:
-      - Database__ConnectionString=
-      - BotOptions__ApiKey=
-    stdin_open: true
-    tty: true
-
-  lottery_client:
-    image: ykaoo/lottery:latest
-    expose:
-      - "8083"
-    environment:
-      - NGINX_PORT=8083
     stdin_open: true
     tty: true
 
